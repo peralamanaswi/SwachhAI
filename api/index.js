@@ -65,22 +65,31 @@ const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
 
 // MongoDB connection
 let mongoConnected = false;
+let mongoConnecting = false;
 
 async function connectMongo() {
   if (mongoConnected) return;
+  if (mongoConnecting) return; // prevent concurrent connections
+  
+  mongoConnecting = true;
   try {
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, { 
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     mongoConnected = true;
     console.log('MongoDB connected');
-    await seedAdminUser();
+    await seedAdminUser().catch(err => console.error('Seed error:', err.message));
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
     mongoConnected = false;
+  } finally {
+    mongoConnecting = false;
   }
 }
 
-// Initialize MongoDB connection
-connectMongo().catch(err => console.error('Failed to initialize MongoDB:', err));
+// Attempt initial connection (don't wait for it)
+connectMongo().catch(err => console.error('Initial MongoDB connection failed:', err.message));
 
 // Seed admin user
 async function seedAdminUser() {
@@ -130,9 +139,28 @@ function adminOnly(req, res, next) {
   next();
 }
 
+// Middleware to ensure MongoDB is connected before database operations
+function ensureMongoConnected(req, res, next) {
+  if (mongoConnected) {
+    return next();
+  }
+  // Try to connect if not already attempting
+  if (!mongoConnecting) {
+    connectMongo().catch(err => console.error('Connection attempt failed:', err.message));
+  }
+  // Wait a bit and retry
+  setTimeout(() => {
+    if (mongoConnected) {
+      next();
+    } else {
+      res.status(503).send('Database connection unavailable');
+    }
+  }, 500);
+}
+
 // ===== AUTH ROUTES =====
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', ensureMongoConnected, async (req, res) => {
   try {
     const { name, mobile, password } = req.body;
     if (!name || !mobile || !password) return res.status(400).send('Missing fields');
@@ -155,7 +183,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', ensureMongoConnected, async (req, res) => {
   try {
     const { mobile, password } = req.body;
     if (!mobile || !password) return res.status(400).send('Missing fields');
@@ -180,7 +208,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // ===== COMPLAINT ROUTES =====
 
-app.post('/api/complaints', authMiddleware, upload.single('image'), async (req, res) => {
+app.post('/api/complaints', ensureMongoConnected, authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const userId = req.user.id;
     const {
@@ -218,7 +246,7 @@ app.post('/api/complaints', authMiddleware, upload.single('image'), async (req, 
   }
 });
 
-app.get('/api/users/me/complaints', authMiddleware, async (req, res) => {
+app.get('/api/users/me/complaints', ensureMongoConnected, authMiddleware, async (req, res) => {
   try {
     const list = await Complaint.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
@@ -249,7 +277,7 @@ app.get('/api/users/me/complaints', authMiddleware, async (req, res) => {
 
 // ===== ADMIN ROUTES =====
 
-app.get('/api/admin/complaints', authMiddleware, adminOnly, async (req, res) => {
+app.get('/api/admin/complaints', ensureMongoConnected, authMiddleware, adminOnly, async (req, res) => {
   try {
     const { status, page = 1, limit = 100 } = req.query;
     const q = status ? { status } : {};
@@ -267,7 +295,7 @@ app.get('/api/admin/complaints', authMiddleware, adminOnly, async (req, res) => 
   }
 });
 
-app.patch('/api/admin/complaints/:id', authMiddleware, adminOnly, async (req, res) => {
+app.patch('/api/admin/complaints/:id', ensureMongoConnected, authMiddleware, adminOnly, async (req, res) => {
   try {
     const id = req.params.id;
     const { status } = req.body;
