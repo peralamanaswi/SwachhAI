@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SwachhAI — Smart Cities</title>
+<style>
+  :root{
+    --accent1:#06b6d4;
+    --accent2:#0ea5a2;
+    --muted:#9fe;
+    --dark-bg:#021821;
+    --panel-bg: rgba(6,22,24,0.95);
+    --form-bg: linear-gradient(180deg, rgba(3,32,34,0.98), rgba(6,22,24,0.95));
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--dark-bg);color:#eaf6f6}
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:url('background.jpeg');
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+    filter:brightness(0.55) saturate(0.9);
+    z-index:0;
+  }
+
+  .topbar{position:relative;z-index:3;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(0,0,0,0.35);backdrop-filter:blur(4px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{width:44px;height:44px;border-radius:8px;background:#fff;object-fit:cover}
+  .brand h1{margin:0;font-size:18px}
+  .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .nav .navlink{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:#eaf6f6;cursor:pointer}
+  .nav .navlink.active{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#022;font-weight:700}
+  #userNavBtn{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:#bfffbf}
+
+  main{position:relative;z-index:2;min-height:calc(100vh - 68px);padding:22px 28px;box-sizing:border-box}
+  #homeContent{max-width:980px;margin:36px auto;padding:32px;border-radius:12px;background:linear-gradient(180deg, rgba(2,13,14,0.6), rgba(2,9,10,0.6));box-shadow:0 10px 30px rgba(0,0,0,0.5);text-align:center}
+  #homeContent h2{margin:0 0 8px 0;font-size:28px}
+  #homeContent p{margin:0 0 18px;color:var(--muted)}
+
+  .module{display:none;max-width:1100px;margin:18px auto;padding:18px;border-radius:10px;background:rgba(0,0,0,0.45)}
+  .module.active{display:block}
+  .card{padding:14px;border-radius:10px}
+  label{display:block;margin-top:10px;font-weight:600;color:#cfe}
+  input,textarea,button,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);margin-top:6px;background:transparent;color:#eaf6f6;box-sizing:border-box}
+  .row{display:flex;gap:12px}
+  .row> *{flex:1}
+  .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;padding:10px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#eaf6f6;padding:8px;border-radius:8px;cursor:pointer}
+  .img-preview{max-width:320px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);display:block;margin-top:8px}
+  .small{font-size:13px;color:#bcd}
+  .history-item{background:#fbfffe;color:#022;padding:10px;border-radius:8px;margin-bottom:10px}
+
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60}
+  .modal.show{display:flex}
+  .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+  .modal-panel{position:relative;z-index:62;width:94%;max-width:920px;border-radius:12px;overflow:hidden;background:var(--panel-bg);color:#eaf6f6;padding:18px;box-sizing:border-box}
+  #modalVideo{width:100%;height:420px;background:#000;border-radius:8px;object-fit:cover;display:block}
+  .camera-controls{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
+
+  .form-fullscreen{position:fixed;inset:0;display:none;z-index:80;align-items:center;justify-content:center}
+  .form-panel{width:100%;height:100%;overflow:auto;background:var(--form-bg);color:#eaf6f6;padding:26px;box-sizing:border-box}
+  .form-panel label{color:#cfe;display:block;margin-top:14px;font-weight:700}
+  .form-panel input,.form-panel textarea,.form-panel select{background:transparent;color:#eaf6f6;border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:8px;width:100%;box-sizing:border-box;margin-top:8px}
+  .form-panel .btn{color:#012;font-weight:700;border-radius:8px;padding:12px}
+  .form-actions{display:flex;gap:12px;margin-top:18px;justify-content:flex-start;align-items:center}
+  .form-actions .ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#eaf6f6;padding:10px;border-radius:8px;cursor:pointer}
+  .form-panel .right-section{display:flex;gap:8px;align-items:center}
+
+  #predictOverlay{display:none;position:fixed;inset:0;z-index:120;align-items:center;justify-content:center}
+  #predictOverlay .box{background:#fff;padding:18px;border-radius:10px;color:#062627;font-weight:700;display:flex;flex-direction:column;align-items:center}
+
+  #welcomeScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:90}
+  #welcomeOverlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(1px)}
+  #welcomeCard{position:relative;z-index:92;width:680px;max-width:94%;padding:28px;border-radius:12px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.45));box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center}
+  #welcomeCard h1{margin:0 0 8px 0;font-size:34px}
+  #welcomeCard p{margin:0 0 18px;color:var(--muted)}
+  #welcomeCard .wide-btn{display:inline-block;width:60%;min-width:260px;padding:12px;border-radius:10px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#012;font-weight:700;cursor:pointer;border:none}
+
+  .welcome-action-row{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:12px}
+
+  .auth-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:100}
+  .auth-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+  .auth-panel{position:relative;z-index:101;width:94%;max-width:420px;border-radius:12px;background:var(--panel-bg);padding:24px;box-sizing:border-box;color:#eaf6f6}
+  .auth-panel h2{margin:0 0 10px 0}
+  .auth-panel input{width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#fff}
+  .auth-panel .btn{margin-top:12px;width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#012;font-weight:700;cursor:pointer}
+  .auth-panel .ghost{margin-top:10px;width:100%;padding:12px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#fff;cursor:pointer}
+  .switch-link{margin-top:12px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer}
+
+  #adminApp{display:none;position:fixed;inset:0;z-index:200;background:linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.95));padding:20px;box-sizing:border-box;overflow:auto}
+  #adminTop{display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px}
+  #adminLogout{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;padding:10px 14px;border-radius:8px;color:#012;font-weight:700;cursor:pointer}
+
+  @media(max-width:720px){
+    .row{flex-direction:column}
+    #modalVideo{height:260px}
+    #welcomeCard{padding:18px}
+    .form-panel{padding:18px}
+    .welcome-action-row{gap:8px}
+  }
+
+  .status-badge {
+    display: inline-block;
+    min-width: 84px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    box-sizing: border-box;
+  }
+
+  /* small map preview area */
+  #mapPreview { width:100%; height:220px; border-radius:8px; overflow:hidden; display:none; margin-top:8px; border:1px solid rgba(255,255,255,0.06) }
+  #autocompleteInput { background:transparent; color:#eaf6f6; border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:8px; width:100%; box-sizing:border-box; }
+</style>
+</head>
+<body>
+
+  <div id="welcomeScreen" style="display:flex;">
+    <div id="welcomeOverlay"></div>
+    <div id="welcomeCard" role="dialog" aria-modal="true" aria-label="Welcome to SwachhAI">
+      <img src="logo.jpg" alt="logo" style="width:84px;height:84px;border-radius:12px;margin:0 auto 12px;display:block;object-fit:cover;background:#fff">
+      <h1>Welcome</h1>
+      <p class="small">Smart City Grievance Reporter — report civic issues</p>
+
+      <div class="welcome-action-row">
+        <button id="welcomeSignIn" class="ghost" style="width:220px">Sign In</button>
+        <button id="welcomeAdminBtn" class="ghost" style="width:220px">Admin Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="signInModal" class="auth-modal" aria-hidden="true">
+    <div class="auth-overlay" onclick="closeAuthModals()"></div>
+    <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+      <h2 id="signinTitle">Sign In</h2>
+      <p class="small" style="margin-top:0;margin-bottom:10px">Enter mobile and password</p>
+      <label>Mobile</label>
+      <input id="signin_mobile" placeholder="9876543210">
+      <label>Password</label>
+      <input id="signin_password" type="password" placeholder="Password">
+      <div id="signinError" style="color:#ffb4b4;display:none;margin-top:8px"></div>
+      <button class="btn" onclick="doSignIn()">Sign In</button>
+      <button class="ghost" onclick="closeAuthModals()">Cancel</button>
+      <div class="switch-link" onclick="switchToRegister()">New here? Create account</div>
+    </div>
+  </div>
+
+  <div id="registerModal" class="auth-modal" aria-hidden="true">
+    <div class="auth-overlay" onclick="closeAuthModals()"></div>
+    <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="regTitle">
+      <h2 id="regTitle">Create Account</h2>
+      <label>Full name</label>
+      <input id="reg_name" placeholder="Your full name">
+      <label>Mobile</label>
+      <input id="reg_mobile" placeholder="9876543210">
+      <label>Password</label>
+      <input id="reg_password" type="password" placeholder="min 8 chars, 1 digit">
+      <label>Confirm password</label>
+      <input id="reg_confirm" type="password" placeholder="confirm password">
+      <div id="registerError" style="color:#ffb4b4;display:none;margin-top:8px"></div>
+      <button class="btn" onclick="doRegister()">Create account</button>
+      <button class="ghost" onclick="closeAuthModals()">Cancel</button>
+      <div class="switch-link" onclick="switchToSignIn()">Already have an account? Sign In</div>
+    </div>
+  </div>
+
+  <div id="mainApp" style="display:none">
+    <div class="topbar">
+      <div class="brand">
+        <img src="logo.jpg" alt="logo">
+        <div>
+          <h1 style="margin:0">SwachhAI</h1>
+          <div class="small">For Smarter Cities</div>
+        </div>
+      </div>
+
+      <div class="nav" id="mainNav" role="navigation" aria-label="Main navigation">
+        <button class="navlink active" data-target="home">Home</button>
+        <button class="navlink" data-target="form">Form</button>
+        <button class="navlink" data-target="history">History</button>
+        <button class="navlink" data-target="about">About</button>
+        <button id="userNavBtn" title="Account" style="display:inline-flex"><span id="navUserName"></span></button>
+      </div>
+    </div>
+
+    <main>
+      <section id="home" class="module active">
+        <div id="homeContent">
+          <h2>Welcome to SwachAI</h2>
+          <p class="small">Smart City Grievance Reporter — report civic issues </p>
+          <button class="btn" onclick="openCameraModal()">Start Complaint</button>
+        </div>
+      </section>
+
+      <section id="form" class="module card">
+        <h3 style="margin-top:0">Make a Complaint</h3>
+        <p class="small">Click Start Complaint to capture/upload a photo and auto-fill the form.</p>
+        <button class="btn" onclick="openCameraModal()">Start Complaint</button>
+      </section>
+
+      <section id="history" class="module card">
+        <h3 style="margin-top:0">My Complaints</h3>
+        <div id="historyContainer" style="margin-top:12px"></div>
+      </section>
+
+      <section id="about" class="module card">
+        <h3 style="margin-top:0">About</h3>
+        <div class="small">
+          <p>SwachhAI is an AI-powered smart grievance reporting system designed to enable citizens to report civic issues such as potholes, garbage dumps, and drainage leaks quickly and efficiently.</p>
+        </div>
+      </section>
+
+      <section id="adminPanel" class="module card" style="display:none">
+        <h3 style="margin-top:0">Admin — Complaints</h3>
+        <div id="adminListContainer" style="margin-top:12px"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="adminApp" aria-hidden="true">
+    <div id="adminTop">
+      <button id="adminLogout">Logout</button>
+    </div>
+    <div style="max-width:1200px;margin:0 auto;color:#eaf6f6">
+      <h2 style="margin-top:6px;margin-bottom:6px">Admin — Complaints</h2>
+      <div id="adminListContainerAdminView"></div>
+    </div>
+  </div>
+
+  <div id="cameraModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-overlay" onclick="closeCameraModal()"></div>
+    <div class="modal-panel"role="document" aria-labelledby="captureTitle">
+      <div style="display:flex;justify-content:center;align-items:center;margin-bottom:1px">
+       <h4 id="captureTitle" style="margin:0; text-align:center;">Capture / Upload </h4>
+      </div>
+
+      <video id="modalVideo" autoplay playsinline></video>
+      <canvas id="captureCanvas" style="display:none"></canvas>
+
+      <div class="camera-controls">
+        <button id="modalStartCam" class="btn" style="flex:1" onclick="startCameraStream()">Start Camera</button>
+        <button id="modalCaptureBtn" class="btn" style="flex:1" onclick="doCapture()">Capture</button>
+        <label class="ghost" style="padding:10px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center">
+          Upload
+          <input id="modalFile" type="file" accept="image/*" style="display:none" onchange="handleModalFile(event)">
+        </label>
+         <button class="ghost" onclick="closeCameraModal()">Close</button>
+      </div>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:13px">Captured image will be used to auto-fill.</div>
+    </div>
+  </div>
+
+  <div id="adminModal" class="auth-modal" aria-hidden="true">
+    <div class="auth-overlay" onclick="closeAdminModal()"></div>
+    <div class="auth-panel" role="dialog" aria-modal="true" style="max-width:520px">
+      <h2>Admin Login</h2>
+      <label>Mobile</label>
+      <input id="adminMobile" placeholder="Admin mobile">
+      <label>Password</label>
+      <input id="adminPassword" type="password" placeholder="Password">
+      <div id="adminLoginError" style="color:#ffb4b4;display:none;margin-top:6px"></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn" style="flex:1" onclick="adminLogin()">Sign In</button>
+        <button class="ghost" style="flex:1" onclick="closeAdminModal()">Cancel</button>
+      </div>
+      <div class="switch-link" style="text-align:left;margin-top:12px;color:var(--muted)">
+        Tip: create a user account then set role to <code>admin</code> in MongoDB for testing.
+      </div>
+    </div>
+  </div>
+
+  <div id="formFullscreen" class="form-fullscreen" role="dialog" aria-modal="true">
+    <div class="form-panel" role="document">
+      <h2 style="margin-top:6px;margin-bottom:4px">Grievance Form</h2>
+      <p style="color:var(--muted);margin-top:0;margin-bottom:12px">Review and submit the complaint</p>
+
+      <label>Complaint ID</label>
+      <input id="fs_formID" readonly>
+
+      <div class="row">
+        <div>
+          <label>Name</label>
+          <input id="fs_formName" placeholder="Your name" required>
+        </div>
+        <div>
+          <label>Mobile</label>
+          <input id="fs_formMobile" placeholder="9876543210" required>
+        </div>
+      </div>
+
+      <label>Category</label>
+      <input id="fs_formCategory" readonly>
+
+      <label>Sub-Category</label>
+      <input id="fs_formSubcat" readonly>
+
+      <label>Locality</label>
+      <input id="fs_formLocality">
+
+      <label>District</label>
+      <input id="fs_formDistrict">
+
+      <label>State</label>
+      <input id="fs_formState">
+
+      <label>Pincode</label>
+      <input id="fs_formPincode">
+
+      <label>Selected landmark address (search or use current location)</label>
+      <input id="autocompleteInput" placeholder="Search for landmark or click Use current location">
+
+      <div id="mapPreview"></div>
+
+<div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+  <button id="useCurrentLocation" class="btn" type="button" title="Use your device GPS to get current location">
+    Use current location
+  </button>
+  <div id="locStatus" class="small" style="color:var(--muted);">Tap to get accurate location</div>
+</div>
+
+      <label>Description</label>
+      <textarea id="fs_formDesc" rows="4" placeholder="Description will be auto-filled when image + location are available"></textarea>
+
+      <label>Photo</label><br>
+      <img id="fs_formPhotoPreview" style="max-width:420px;border:1px solid rgba(255,255,255,0.08);padding:6px;border-radius:6px;display:block;margin-top:8px"/>
+
+      <div class="form-actions">
+        <div class="right-section" style="margin-left:auto">
+          <button id="fs_submitBtn" class="btn" onclick="fsSubmit()">Submit</button>
+          <button class="ghost" onclick="closeFormFullscreen()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="predictOverlay">
+    <div class="box">
+      <div style="width:48px;height:48px;border:5px solid rgba(0,0,0,0.08);border-top-color:var(--accent1);border-radius:50%;animation:spin 1s linear infinite"></div>
+      <div style="margin-top:8px">Analyzing image and fetching location — please wait</div>
+    </div>
+  </div>
+
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+<!-- Google Maps JS with Places & Geocoding (API key from you) -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDq2qzKSxsWdaOlZ2oN1BcljLeqaPHgWp4&libraries=places"></script>
+
+<script>
+/* ================= Globals for maps/geom ================= */
+let gmap = null;
+let gmarker = null;
+let ggeocoder = null;
+let gautocomplete = null;
+let gmapInitialized = false;
+
+/* Initialize google map / places autocomplete. Called lazily if google available */
+function initGoogleMap(){
+  try{
+    if(!window.google || !google.maps) { console.warn('Google maps not available'); return; }
+    if(gmapInitialized) return;
+    ggeocoder = new google.maps.Geocoder();
+    gmap = new google.maps.Map(document.getElementById('mapPreview'), {
+      center: { lat: 17.3850, lng: 78.4867 }, // default Hyderabad
+      zoom: 15,
+      disableDefaultUI: true,
+      gestureHandling: 'greedy'
+    });
+    gmarker = new google.maps.Marker({ map: gmap, draggable: true });
+    gmarker.addListener('dragend', async function(){
+      const pos = gmarker.getPosition();
+      try{
+        const res = await new Promise((resolve,reject)=>{
+          ggeocoder.geocode({ location: { lat: pos.lat(), lng: pos.lng() } }, (results, status) => {
+            if(status === 'OK' && results && results.length) resolve(results[0]);
+            else reject(new Error('status:'+status));
+          });
+        });
+        fillAddressFromGoogleResult(res);
+        document.getElementById('autocompleteInput').value = res.formatted_address || '';
+      }catch(e){ console.warn('geocode on drag failed', e); }
+    });
+    // autocomplete for landmark input
+    const inp = document.getElementById('autocompleteInput');
+    gautocomplete = new google.maps.places.Autocomplete(inp, { types: ['geocode','establishment'] });
+    gautocomplete.addListener('place_changed', function(){
+      const place = gautocomplete.getPlace();
+      if(!place.geometry){ console.warn('no geometry on place'); return; }
+      const loc = place.geometry.location;
+      if(gmap){ gmap.setCenter(loc); gmarker.setPosition(loc); document.getElementById('mapPreview').style.display = 'block'; }
+      fillAddressFromGoogleResult(place);
+    });
+    gmapInitialized = true;
+    console.log('Google Maps initialized');
+    // attempt one automatic high-accuracy locate (user will be prompted for permissions)
+setTimeout(()=> {
+  /* slight delay so UI is ready */
+  if(document.visibilityState === 'visible') useCurrentLocation();
+}, 700);
+  }catch(e){ console.warn('initGoogleMap error', e); }
+}
+
+/* fill fields using Google Places/Geocoder result */
+function fillAddressFromGoogleResult(place){
+  try{
+    // Get formatted parts
+    const components = place.address_components || [];
+    const comp = (type)=> {
+      const c = components.find(x=>x.types && x.types.indexOf(type)!==-1);
+      return c ? c.long_name : '';
+    };
+    const locality = comp('sublocality')||comp('neighborhood')||comp('locality')||comp('postal_town')||comp('administrative_area_level_2')||'';
+    const district = comp('administrative_area_level_2')||comp('administrative_area_level_3')||comp('administrative_area_level_1')||'';
+    const state = comp('administrative_area_level_1')||'';
+    const postcode = comp('postal_code')||'';
+    const display = place.formatted_address || (place.vicinity || '');
+    document.getElementById('fs_formLocality').value = locality;
+    document.getElementById('fs_formDistrict').value = district;
+    document.getElementById('fs_formState').value = state;
+    document.getElementById('fs_formPincode').value = postcode;
+    document.getElementById('fs_formDesc').value = `Please inspect reported issue near ${display}.\n\nPlease take necessary action to resolve this civic issue at the earliest.`;
+  }catch(e){ console.warn('fillAddressFromGoogleResult error', e); }
+}
+// ----------------- Use current location helper -----------------
+async function useCurrentLocation() {
+  const statusEl = q('locStatus');
+  statusEl.innerText = 'Requesting location…';
+  // Try HTML5 geolocation with highAccuracy
+  if (!navigator.geolocation) {
+    statusEl.innerText = 'Geolocation not supported';
+    return;
+  }
+
+  const getPosition = () => new Promise((resolve, reject) => {
+    // High accuracy, timeout 12s, allow cached position up to 10s (maximumAge)
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 10000
+    });
+  });
+
+  try {
+    const pos = await getPosition();
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    statusEl.innerText = `Got location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+    // Ensure Google map is initialized
+    try { if (!gmapInitialized) initGoogleMap(); } catch (e) { console.warn(e); }
+
+    // Move map & marker if available
+    if (gmap && gmarker) {
+      const latLng = new google.maps.LatLng(lat, lng);
+      gmap.setCenter(latLng);
+      gmap.setZoom(17);
+      gmarker.setPosition(latLng);
+      document.getElementById('mapPreview').style.display = 'block';
+    }
+
+    // Try to reverse geocode using Google if available
+    if (ggeocoder && typeof ggeocoder.geocode === 'function') {
+      ggeocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === 'OK' && results && results.length) {
+          fillAddressFromGoogleResult(results[0]);
+          q('autocompleteInput').value = results[0].formatted_address || '';
+          statusEl.innerText = 'Location set (via Google)';
+        } else {
+          statusEl.innerText = 'Reverse geocode failed (Google)';
+        }
+      });
+      return;
+    }
+
+    // Fallback: Nominatim reverse geocode (if Google not available)
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=en`);
+      if (r.ok) {
+        const data = await r.json();
+        const addr = data.address || {};
+        q('fs_formLocality').value = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city || '';
+        q('fs_formDistrict').value = addr.city_district || addr.county || addr.region || addr.city || '';
+        q('fs_formState').value = addr.state || '';
+        q('fs_formPincode').value = addr.postcode || '';
+        q('fs_formDesc').value = `Please inspect reported issue near ${data.display_name || ''}.\n\nPlease take necessary action at the earliest.`;
+        q('autocompleteInput').value = data.display_name || '';
+        statusEl.innerText = 'Location set (via Nominatim)';
+      } else {
+        statusEl.innerText = 'Reverse geocode failed (Nominatim)';
+      }
+    } catch (err) {
+      console.warn('nominatim error', err);
+      statusEl.innerText = 'Reverse geocode error';
+    }
+  } catch (err) {
+    console.warn('getCurrentPosition error', err);
+    const msg = (err && err.code === 1) ? 'Permission denied' : (err && err.message) ? err.message : 'Unable to get location';
+    q('locStatus').innerText = msg;
+  }
+}
+
+// wire the button once DOM is ready
+document.addEventListener('DOMContentLoaded', function(){
+  const btn = q('useCurrentLocation');
+  if(btn) btn.addEventListener('click', useCurrentLocation);
+});
+
+/* ================= Utilities & API helpers ================= */
+function q(id){ return document.getElementById(id); }
+function validateMobile(m){ return /^\d{10}$/.test((m||'').trim()); }
+function authHeaders(){ const t = localStorage.getItem('sw_token'); return t ? { 'Authorization': 'Bearer '+t } : {}; }
+
+/* API wrappers */
+async function apiRegister(name,mobile,password){
+  const res = await fetch('/api/auth/register', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ name,mobile,password })
+  });
+  if(!res.ok){ const txt = await res.text(); throw new Error(txt || 'Registration failed'); }
+  return res.json();
+}
+async function apiLogin(mobile,password){
+  const res = await fetch('/api/auth/login', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ mobile,password })
+  });
+  if(!res.ok){ const txt = await res.text(); throw new Error(txt || 'Login failed'); }
+  return res.json();
+}
+async function apiGetMyComplaints(){
+  const headers = authHeaders();
+  const res = await fetch('/api/users/me/complaints', { method:'GET', headers });
+  if(res.status === 401){ localStorage.removeItem('sw_token'); localStorage.removeItem('sw_user'); alert('Session expired. Please sign in again.'); location.reload(); return []; }
+  if(!res.ok){ const txt = await res.text(); throw new Error(txt || 'Failed to get complaints'); }
+  const data = await res.json(); return data.complaints || [];
+}
+async function apiSubmitComplaint(formValues, imageFileOrBlob) {
+  const fd = new FormData();
+  Object.entries(formValues).forEach(([k,v])=>{ if(v!==undefined && v!==null) fd.append(k, v); });
+  if(imageFileOrBlob) fd.append('image', imageFileOrBlob, imageFileOrBlob.name || 'capture.png');
+  const headers = authHeaders();
+  const res = await fetch('/api/complaints', { method:'POST', headers, body: fd });
+  if(res.status === 401){ localStorage.removeItem('sw_token'); localStorage.removeItem('sw_user'); throw new Error('Unauthorized - please sign in again'); }
+  if(!res.ok){ const txt = await res.text(); throw new Error(txt || 'Submit failed'); }
+  return res.json();
+}
+
+/* ================= Welcome + Auth flow (SignIn/Register) ================= */
+function openSignInModal(){ q('signInModal').style.display='flex'; q('signInModal').setAttribute('aria-hidden','false'); }
+function openRegisterModal(){ q('registerModal').style.display='flex'; q('registerModal').setAttribute('aria-hidden','false'); }
+function closeAuthModals(){ q('signInModal').style.display='none'; q('registerModal').style.display='none'; q('signInModal').setAttribute('aria-hidden','true'); q('registerModal').setAttribute('aria-hidden','true'); }
+function switchToRegister(){ closeAuthModals(); openRegisterModal(); }
+function switchToSignIn(){ closeAuthModals(); openSignInModal(); }
+
+q('welcomeSignIn').addEventListener('click', ()=> openSignInModal());
+q('welcomeAdminBtn').addEventListener('click', ()=> openAdminModal());
+
+async function doSignIn(){
+  const mobile = q('signin_mobile').value.trim();
+  const pass = q('signin_password').value;
+  const err = q('signinError'); err.style.display='none';
+  if(!validateMobile(mobile)){ err.innerText='Enter valid 10-digit mobile'; err.style.display='block'; return; }
+  if(!pass){ err.innerText='Enter password'; err.style.display='block'; return; }
+  try{
+    const data = await apiLogin(mobile, pass);
+    localStorage.setItem('sw_token', data.accessToken);
+    localStorage.setItem('sw_user', JSON.stringify(data.user));
+    err.style.display='none';
+    closeAuthModals();
+    enterAppView();
+  }catch(e){
+    err.innerText = 'Login failed: ' + (e.message || e);
+    err.style.display = 'block';
+  }
+}
+
+async function doRegister(){
+  const name = q('reg_name').value.trim();
+  const mobile = q('reg_mobile').value.trim();
+  const pass = q('reg_password').value;
+  const conf = q('reg_confirm').value;
+  const err = q('registerError'); err.style.display='none';
+  if(!name){ err.innerText='Enter full name'; err.style.display='block'; return; }
+  if(!validateMobile(mobile)){ err.innerText='Enter valid 10-digit mobile'; err.style.display='block'; return; }
+  if(pass.length < 6 || !/\d/.test(pass)){ err.innerText='Password must be at least 6 chars & contain a digit'; err.style.display='block'; return; }
+  if(pass !== conf){ err.innerText='Passwords do not match'; err.style.display='block'; return; }
+  try{
+    const data = await apiRegister(name,mobile,pass);
+    localStorage.setItem('sw_token', data.accessToken);
+    localStorage.setItem('sw_user', JSON.stringify(data.user));
+    closeAuthModals();
+    enterAppView();
+  }catch(e){
+    err.innerText = 'Register failed: ' + (e.message || e);
+    err.style.display = 'block';
+  }
+}
+
+function enterAppView(){
+  q('welcomeScreen').style.display = 'none';
+  q('mainApp').style.display = 'block';
+  const user = JSON.parse(localStorage.getItem('sw_user')||'null');
+  if(user) q('navUserName').innerText = (user.name || 'USER').toUpperCase();
+  showSection('home');
+  loadAndRenderHistory();
+}
+
+q('userNavBtn').addEventListener('click', ()=> {
+  const user = JSON.parse(localStorage.getItem('sw_user')||'null');
+  if(!user){
+    alert('Not signed in. Use Sign In / Register.');
+    openSignInModal();
+  } else {
+    if(confirm('Sign out?')){
+      localStorage.removeItem('sw_token');
+      localStorage.removeItem('sw_user');
+      q('mainApp').style.display = 'none';
+      q('welcomeScreen').style.display = 'flex';
+      q('navUserName').innerText = '';
+    }
+  }
+});
+
+/* ================= Admin modal & admin-only view ================= */
+function openAdminModal(){ q('adminModal').style.display='flex'; q('adminModal').setAttribute('aria-hidden','false'); q('adminLoginError').style.display='none'; }
+function closeAdminModal(){ q('adminModal').style.display='none'; q('adminModal').setAttribute('aria-hidden','true'); }
+
+async function adminLogin(){
+  const mobile = q('adminMobile').value.trim();
+  const pass = q('adminPassword').value;
+  const err = q('adminLoginError'); err.style.display='none';
+  if(!mobile || !pass){ err.innerText = 'Enter mobile and password'; err.style.display='block'; return; }
+  try{
+    const data = await apiLogin(mobile, pass);
+    if(!data.user || data.user.role !== 'admin'){ err.innerText = 'Not authorized as admin'; err.style.display='block'; return; }
+    localStorage.setItem('sw_token', data.accessToken);
+    localStorage.setItem('sw_user', JSON.stringify(data.user));
+    closeAdminModal();
+    enterAdminView();
+  }catch(e){
+    err.innerText = e.message || 'Login failed'; err.style.display='block';
+  }
+}
+
+function enterAdminView(){
+  q('welcomeScreen').style.display = 'none';
+  q('mainApp').style.display = 'none';
+  q('adminApp').style.display = 'block';
+  loadAdminComplaintsForAdminView();
+}
+
+function adminLogout(){
+  if(!confirm('Logout admin?')) return;
+  localStorage.removeItem('sw_token');
+  localStorage.removeItem('sw_user');
+  q('adminApp').style.display='none';
+  q('welcomeScreen').style.display='flex';
+}
+document.addEventListener('DOMContentLoaded', ()=> {
+  const btn = q('adminLogout');
+  if(btn) btn.addEventListener('click', adminLogout);
+});
+
+/* Admin list for adminApp */
+async function loadAdminComplaintsForAdminView(){
+  try{
+    const token = localStorage.getItem('sw_token');
+    if(!token){ alert('Please login as admin'); return; }
+    const res = await fetch('/api/admin/complaints', { headers: { 'Authorization': 'Bearer '+token }});
+    if(res.status === 401 || res.status === 403){ alert('Admin access required.'); return; }
+    if(!res.ok){ const txt = await res.text(); throw new Error(txt||'Failed'); }
+    const data = await res.json();
+    renderAdminListForAdminView(data.complaints || []);
+  }catch(e){
+    console.error('load admin complaints err', e);
+    q('adminListContainerAdminView').innerHTML = '<div style="color:#ffd2d2">Failed to load complaints</div>';
+  }
+}
+function renderAdminListForAdminView(list){
+  const wrap = q('adminListContainerAdminView');
+  if(!Array.isArray(list) || list.length===0){ wrap.innerHTML = '<div class="small">No complaints</div>'; return; }
+  wrap.innerHTML = '';
+  list.forEach(c => {
+    const card = document.createElement('div');
+    card.style.background = 'rgba(3,40,42,0.95)';
+    card.style.padding = '12px';
+    card.style.borderRadius = '8px';
+    card.style.marginBottom = '12px';
+    card.style.color = '#dff';
+    const created = c.createdAt ? new Date(c.createdAt).toLocaleString() : '';
+    const userInfo = c.userId ? `${c.userId.name || ''} • ${c.userId.mobile || ''}` : '';
+    const statusColor = (s=>{
+      if(s==='submitted') return '#999';
+      if(s==='accepted') return '#2c7';
+      if(s==='in_progress') return '#f6a623';
+      if(s==='closed') return '#6ab';
+      return '#999';
+    })(c.status);
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div style="flex:1">
+          <strong>${c._id}</strong> • ${created}
+          <div style="margin-top:8px"><strong>Category:</strong> ${c.category||''} — <strong>Sub:</strong> ${c.subcategory||''}</div>
+          <div style="margin-top:8px"><strong>Location:</strong> ${c.location?.locality||''}, ${c.location?.district||''}, ${c.location?.state||''} ${c.location?.pincode||''}</div>
+          <div style="margin-top:8px"><strong>Reporter:</strong> ${userInfo}</div>
+          <div style="margin-top:8px;white-space:pre-wrap">${(c.desc||'')}</div>
+        </div>
+        <div style="min-width:220px;text-align:right">
+          <div style="margin-bottom:8px"><img src="${c.photoUrl||''}" style="max-width:160px;border-radius:6px;display:block;margin-left:auto"></div>
+          <div style="margin-top:10px">
+           <div style="margin-bottom:6px"><strong>Status: </strong><span id="status-${c._id}" class="status-badge" style="background:${statusColor};color:#012">${(c.status||'submitted').toString().replace('_',' ').toUpperCase()}</span></div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn" onclick="adminSetStatus('${c._id}','accepted')">Mark Accepted</button>
+              <button class="btn" onclick="adminSetStatus('${c._id}','in_progress')">Mark In Progress</button>
+              <button class="btn" onclick="adminSetStatus('${c._id}','closed')">Mark closed</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+async function adminSetStatus(id, status){
+  if(!confirm(`Set complaint ${id} to "${status}"?`)) return;
+  try{
+    const token = localStorage.getItem('sw_token');
+    if(!token) { alert('Admin token missing'); return; }
+    const res = await fetch(`/api/admin/complaints/${id}`, {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer '+token },
+      body: JSON.stringify({ status })
+    });
+    if(res.status === 401 || res.status === 403){ alert('Not authorized'); return; }
+    if(!res.ok){ const txt = await res.text(); throw new Error(txt||'Update failed'); }
+    const data = await res.json();
+    if(q('status-'+id)) q('status-'+id).innerText = (data.complaint?.status || status).toString().replace('_',' ').toUpperCase();
+
+    if(q('adminApp').style.display === 'block') loadAdminComplaintsForAdminView();
+    if(q('adminPanel')) loadAdminComplaints();
+    await loadAndRenderHistory();
+    alert('Status updated');
+  }catch(e){
+    console.error('adminSetStatus error', e);
+    alert('Failed to update status: ' + (e.message || e));
+  }
+}
+
+/* Provide loadAdminComplaints fallback for main adminPanel */
+async function loadAdminComplaints(){
+  try{
+    if (typeof loadAdminComplaintsForAdminView === 'function') {
+      await loadAdminComplaintsForAdminView();
+      return;
+    }
+    const token = localStorage.getItem('sw_token');
+    if(!token){ throw new Error('Admin token missing'); }
+    const res = await fetch('/api/admin/complaints', { headers: { 'Authorization': 'Bearer '+token }});
+    if(!res.ok){ const t = await res.text(); throw new Error(t || 'Failed to get complaints'); }
+    const data = await res.json();
+    if (typeof renderAdminList === 'function') {
+      renderAdminList(data.complaints || []);
+    } else {
+      const wrap = document.getElementById('adminListContainer');
+      wrap.innerHTML = JSON.stringify(data.complaints || [], null, 2);
+    }
+  }catch(err){
+    console.error('loadAdminComplaints err', err);
+    const wrap = document.getElementById('adminListContainer');
+    if(wrap) wrap.innerHTML = '<div style="color:#ffd2d2">Failed to load complaints</div>';
+  }
+}
+
+/* ================= Teachable Machine, camera, processing, form submit, history rendering ================= */
+const TM_FOLDER = './model_tm/';
+let tmModel = null;
+const CONF_THRESHOLD = 0.60;
+(async function initTM(){ try{ tmModel = await tmImage.load(TM_FOLDER + 'model.json', TM_FOLDER + 'metadata.json'); console.log('TM loaded'); }catch(e){ console.warn('TM load failed', e); } })();
+
+function openCameraModal(){ q('cameraModal').classList.add('show'); q('cameraModal').style.display='flex'; }
+function closeCameraModal(){ q('cameraModal').classList.remove('show'); q('cameraModal').style.display='none'; const v=q('modalVideo'); if(v&&v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; } }
+async function startCameraStream(){ try{ const s=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } }); q('modalVideo').srcObject = s; } catch(e){ alert('Camera error: '+(e.message||e)); } }
+function doCapture(){ const v=q('modalVideo'); if(!v||!v.videoWidth){ alert('Start camera first'); return; } const c=q('captureCanvas'); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext('2d').drawImage(v,0,0); const dataUrl = c.toDataURL('image/png'); processImageAndOpenForm(dataUrl); closeCameraModal(); }
+function handleModalFile(evt){ const f=evt.target.files&&evt.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ processImageAndOpenForm(e.target.result); closeCameraModal(); }; r.readAsDataURL(f); }
+
+/* ========== REPLACED processImageAndOpenForm (spinner won't hang) ========== */
+async function processImageAndOpenForm(dataUrl){
+  q('predictOverlay').style.display='flex';
+  console.log('processImageAndOpenForm: started');
+
+  let detectedLabel = '', detectedProb = 0;
+
+  if(tmModel){
+    try{
+      const img = new Image(); img.src = dataUrl; await new Promise(r=>img.onload=r);
+      const preds = await tmModel.predict(img, false);
+      preds.sort((a,b)=>b.probability-a.probability);
+      const top = preds[0] || null;
+      if(top){ detectedLabel = top.className || ''; detectedProb = top.probability || 0; }
+      if(detectedProb >= CONF_THRESHOLD){
+        const lc = (detectedLabel||'').toLowerCase();
+        if(lc.includes('garbage')||lc.includes('trash')||lc.includes('rubbish')){ q('fs_formCategory').value='Sanitation'; q('fs_formSubcat').value='Garbage Dump'; }
+        else if(lc.includes('drain')||lc.includes('drainage')||lc.includes('leak')){ q('fs_formCategory').value='Sanitation'; q('fs_formSubcat').value='Drainage Leak'; }
+        else if(lc.includes('pothole')||lc.includes('pathhole')||lc.includes('potholes')){ q('fs_formCategory').value='Sanitation'; q('fs_formSubcat').value='Pothole'; }
+        else { q('fs_formCategory').value='Sanitation'; q('fs_formSubcat').value=detectedLabel; }
+      } else { q('fs_formCategory').value=''; q('fs_formSubcat').value=''; }
+      q('fs_formPhotoPreview').src = dataUrl; q('fs_formPhotoPreview').style.display='block';
+      console.log('model prediction done', detectedLabel, detectedProb);
+    }catch(e){
+      console.warn('predict error (non-blocking):', e);
+    }
+  } else {
+    q('fs_formCategory').value=''; q('fs_formSubcat').value=''; q('fs_formPhotoPreview').src = dataUrl; q('fs_formPhotoPreview').style.display='block';
+    console.log('no TM model available');
+  }
+
+  try{ if(typeof google !== 'undefined' && google.maps && !gmapInitialized){ initGoogleMap(); } }catch(e){ console.warn('maps init check failed', e); }
+
+  window.__pendingImageDataUrl = dataUrl;
+  openFormFullScreen(dataUrl);
+
+  // Hide spinner immediately — background tasks continue
+  q('predictOverlay').style.display = 'none';
+  console.log('Spinner hidden, background tasks continue');
+
+  // Background geolocation + reverse geocode (non-blocking)
+  (async ()=>{
+    try{
+      if(!navigator.geolocation) throw new Error('No geolocation API available');
+      const pos = await new Promise((resolve,reject)=>{
+        let done = false;
+        navigator.geolocation.getCurrentPosition(p=>{
+          if(done) return; done = true; resolve(p);
+        }, err=>{
+          if(done) return; done = true; reject(err);
+        }, { enableHighAccuracy:true, timeout:8000 });
+        setTimeout(()=>{ if(!done){ done = true; reject(new Error('geolocation timeout')); } }, 8500);
+      });
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      console.log('background geolocation success', lat, lon);
+
+      try{ if(gmap && gmarker){ gmap.setCenter({lat, lng: lon}); gmarker.setPosition({lat, lng: lon}); document.getElementById('mapPreview').style.display = 'block'; } }catch(e){}
+
+      let filled = false;
+      try{
+        if(ggeocoder){
+          const googleRes = await new Promise((resolve, reject)=>{
+            ggeocoder.geocode({ location: { lat, lng: lon } }, (results, status) => {
+              if(status === 'OK' && results && results.length) resolve(results[0]);
+              else reject(new Error('Google geocode status: ' + status));
+            });
+          });
+          fillAddressFromGoogleResult(googleRes);
+          q('autocompleteInput').value = googleRes.formatted_address || '';
+          filled = true;
+          console.log('filled via Google geocode');
+        }
+      }catch(e){
+        console.warn('google reverse failed (background):', e);
+      }
+
+      if(!filled){
+        try{
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`);
+          if(res.ok){
+            const data = await res.json();
+            const addr = data.address || {};
+            q('fs_formLocality').value = addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city || '';
+            q('fs_formDistrict').value = addr.city_district || addr.county || addr.region || addr.city || '';
+            q('fs_formState').value = addr.state || '';
+            q('fs_formPincode').value = addr.postcode || '';
+            q('fs_formDesc').value = `Please inspect reported issue near ${data.display_name || ''}.\n\nPlease take necessary action at the earliest.`;
+            q('autocompleteInput').value = data.display_name || '';
+            console.log('filled via Nominatim fallback');
+          }
+        }catch(e){ console.warn('nominatim failed (background):', e); }
+      }
+    }catch(err){
+      console.warn('background geolocation/reverse error (non-blocking):', err);
+    }
+  })();
+}
+/* ========== end replaced function ========== */
+
+function openFormFullScreen(prefilledImageDataURL){
+  q('fs_formID').value = 'CMP-'+Date.now();
+  const user = JSON.parse(localStorage.getItem('sw_user')||'null');
+  if(user){ q('fs_formName').value = user.name || ''; q('fs_formMobile').value = user.mobile || ''; }
+  if(prefilledImageDataURL){ q('fs_formPhotoPreview').src = prefilledImageDataURL; q('fs_formPhotoPreview').style.display='block'; } else q('fs_formPhotoPreview').style.display='none';
+  q('formFullscreen').style.display='flex';
+  setActiveNav('form');
+}
+function closeFormFullscreen(){ q('formFullscreen').style.display='none'; window.__pendingImageDataUrl = null; }
+
+async function fsSubmit(){
+  const name = q('fs_formName').value.trim();
+  const mobile = q('fs_formMobile').value.trim();
+  if(!name){ alert('Enter name'); return; }
+  if(!validateMobile(mobile)){ alert('Enter valid 10-digit mobile'); return; }
+
+  const formValues = {
+    name, mobile,
+    category: q('fs_formCategory').value || 'Sanitation',
+    subcategory: q('fs_formSubcat').value || 'General',
+    locality: q('fs_formLocality').value,
+    district: q('fs_formDistrict').value,
+    state: q('fs_formState').value,
+    pincode: q('fs_formPincode').value,
+    landmark: q('autocompleteInput').value || q('fs_formLandmark')?.value || '',
+    desc: q('fs_formDesc').value,
+  };
+
+  let fileBlob = null;
+  if(window.__pendingImageDataUrl){
+    const res = await fetch(window.__pendingImageDataUrl);
+    fileBlob = await res.blob();
+    fileBlob.name = 'capture.png';
+  }
+
+  q('fs_submitBtn').disabled = true;
+  try{
+    const created = await apiSubmitComplaint(formValues, fileBlob);
+    alert('Complaint submitted! Reference: ' + (created.id || created._id || 'saved'));
+    closeFormFullscreen();
+    await loadAndRenderHistory();
+    showSection('history');
+  }catch(e){
+    alert('Submit failed: ' + (e.message || e));
+  }finally{
+    q('fs_submitBtn').disabled = false;
+  }
+}
+
+async function loadAndRenderHistory(){
+  try{
+    const complaints = await apiGetMyComplaints();
+    renderHistoryUI(complaints);
+  }catch(e){
+    console.error('failed to load history', e);
+    q('historyContainer').innerHTML = '<div style="color:#ffd2d2">Failed to load history from server. Ensure the backend is running and you are signed in.</div>';
+  }
+}
+function renderHistoryUI(list){
+  const c = q('historyContainer'); c.innerHTML = '';
+  if(!Array.isArray(list) || list.length===0){ c.innerHTML = '<div class="small">No complaints found.</div>'; return; }
+  list.forEach(h=>{
+    const d = document.createElement('div'); d.className = 'history-item';
+    const statusColor = (s=>{
+      if(s==='submitted') return '#999';
+      if(s==='accepted') return '#2c7';
+      if(s==='in_progress') return '#f6a623';
+      if(s==='closed') return '#6ab';
+      return '#999';
+    })(h.status);
+    const created = h.createdAt ? new Date(h.createdAt).toLocaleString() : (h.time || '');
+    let locText = '';
+    if(h.location && h.location.display_name) locText = h.location.display_name;
+    else if(h.locality) locText = h.locality;
+    else locText = '';
+    d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <strong>${h.id || h._id || ''}</strong> — ${ (h.desc||'').replace(/\n/g,'<br>') }
+        <div class="small" style="margin-top:8px">${created}${locText ? ' • ' + locText : ''}</div>
+      </div>
+      <div style="text-align:right;min-width:140px">
+        <div class="status-badge" style="background:${statusColor};color:#012;margin-bottom:8px">${(h.status||'submitted').toString().replace('_',' ').toUpperCase()}</div>
+        ${ h.photoUrl ? `<img src="${h.photoUrl}" style="max-width:120px;border-radius:6px;display:block;margin-top:6px">` : '' }
+      </div>
+    </div>`;
+    c.appendChild(d);
+  });
+}
+
+/* Navigation helpers */
+function clearActiveNav(){ document.querySelectorAll('.nav .navlink').forEach(b=>b.classList.remove('active')); }
+function setActiveNav(target){ clearActiveNav(); const btn = document.querySelector(`.nav .navlink[data-target="${target}"]`); if(btn) btn.classList.add('active'); }
+function showSection(name){
+  document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+  if(name==='home'){ q('home').classList.add('active'); }
+  else if(name==='form'){ q('form').classList.add('active'); openFormFullScreen(null); }
+  else if(name==='history'){ q('history').classList.add('active'); }
+  else if(name==='about'){ q('about').classList.add('active'); }
+  setActiveNav(name);
+}
+document.querySelectorAll('.nav .navlink').forEach(btn=>{ btn.addEventListener('click', ()=>{ const t=btn.getAttribute('data-target'); showSection(t); }); });
+
+/* Init */
+(function init(){
+  // try to init google maps when available
+  try{ if(window.google && google.maps) initGoogleMap(); }catch(e){ /* ignore */ }
+
+  const user = JSON.parse(localStorage.getItem('sw_user')||'null');
+  const token = localStorage.getItem('sw_token');
+  if(user && token){
+    q('welcomeScreen').style.display='none';
+    q('mainApp').style.display='block';
+    q('navUserName').innerText = (user.name || 'USER').toUpperCase();
+    showSection('home');
+    loadAndRenderHistory();
+  } else {
+    q('welcomeScreen').style.display='flex';
+    q('mainApp').style.display='none';
+  }
+})();
+</script>
+</body>
+</html>
