@@ -1,5 +1,5 @@
 // api/index.js - Vercel serverless handler
-require('dotenv').config();
+// Note: Don't require dotenv in Vercel - use environment variables directly
 
 const express = require('express');
 const mongoose = require('mongoose');
